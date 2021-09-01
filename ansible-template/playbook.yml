@@ -1,10 +1,12 @@
 ---
 - hosts: all
   become: true
+  # vars: 
+  #   nom_utilisateur: "tata"
   vars_files: vars.yml
   tasks:
-  - name: copy file
-    copy: 
-      src: ./
-      dest: /
+  - name: copy file {{ nom_utilisateur }}
+    template: 
+      src: "index.html.j2"
+      dest: /html/index.html
 
