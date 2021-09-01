@@ -2,17 +2,66 @@
 - hosts: all
   become: true
   tasks:
-  # - name: update distibution
-  #   apt:
-  #     update_cache: yes
-  # - name: install git
-  #   apt:
-  #     name:
-  #       - git
-  #       - nodejs
-  #       - npm
-  #     update_cache: yes
-  - name: file configuration copy
-    copy:
-      src: conf/
-      dest: /
+    - name: Installation des packages de base pour docker pour famille debian
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+        update_cache: yes
+      when: ansible_facts['os_family'] == 'Debian'
+    - name: Installation des packages de base pour docker pour famille centos
+      yum:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+        update_cache: yes
+      when: ansible_facts['os_family'] == 'RedHat'
+
+    # Ajouter la clé gpg pour la sécurité des échanges avec le serveur des packages docker
+    - name: ajout de la cle gpg
+      apt_key:
+        url: https://download.docker.com/linux/debian/gpg
+        state: present
+      when: ansible_facts['os_family'] == 'Debian'
+
+    # ajouter le repos pour chercher les packages de docker
+    - name: Ajout de l'adresse du repos pour les packages docker de debian
+      apt_repository:
+        repo: deb https://download.docker.com/linux/debian stretch stable
+        state: present
+    - name: Index new repo into the cache
+      apt:
+        name: "*"
+        state: latest
+        update_cache: yes
+        force_apt_get: yes
+    # installation des composants docker
+    - name: install docker components
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+        update_cache: yes
+      notify: start docker service
+
+    # démarrage du service
+    # - name: start docker service
+    #   service:
+    #     name: docker
+    #     state: started
+    #     enabled: yes
+
+  handlers:
+    # démarrage du service
+    - name: start docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
