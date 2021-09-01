@@ -1,0 +1,4 @@
+---
+# mysql_user: "utilisateur"
+# mysql_password: "mysql_password"
+version: 1
